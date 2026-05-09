@@ -1,0 +1,97 @@
+<!-- templates/reminders/dashboard.html - UPDATED VERSION -->
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Medicine Reminders Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">💊 Medicine Reminders</h1>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="mb-4 p-4 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% elif message.tags == 'info' %}bg-blue-100 text-blue-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Today's Schedule -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <h2 class="text-2xl font-bold mb-4">📅 Today's Schedule</h2>
+        
+        {% if today_schedule %}
+            <div class="space-y-4">
+                {% for item in today_schedule %}
+                    <div class="flex justify-between items-center p-4 border border-gray-300 rounded-lg hover:shadow-md">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-lg">{{ item.medicine.name }}</h3>
+                            <p class="text-gray-600">
+                                🕐 {{ item.reminder_time.time|time:"h:i A" }} | 
+                                💊 {{ item.medicine.dosage_amount }} {{ item.medicine.get_dosage_unit_display }}
+                            </p>
+                            {% if item.medicine.food_timing != 'any' %}
+                                <p class="text-sm text-blue-600">🍽️ {{ item.medicine.get_food_timing_display }}</p>
+                            {% endif %}
+                            {% if item.has_calendar %}
+                                <p class="text-xs text-green-600 mt-1">✅ Synced to Calendar</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            <!-- Mark as Taken -->
+                            <form method="POST" action="{% url 'reminders:mark_taken' item.medicine.id item.reminder_time.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                                    {% if item.taken %}✅ Taken{% else %}Mark Taken{% endif %}
+                                </button>
+                            </form>
+                            
+                            <!-- Add to Calendar - FIXED DIRECT LINK -->
+                            {% if item.has_calendar and item.calendar_link %}
+                                <a href="{{ item.calendar_link }}" target="_blank" 
+                                   class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 inline-flex items-center gap-2">
+                                    📅 View in Calendar
+                                </a>
+                            {% else %}
+                                <a href="{% url 'reminders:add_to_calendar' item.medicine.id item.reminder_time.id %}" 
+                                   class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 inline-flex items-center gap-2">
+                                    📅 Add to Calendar
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-gray-600">No reminders scheduled for today</p>
+        {% endif %}
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-2xl font-bold mb-4">⚡ Quick Actions</h2>
+        <div class="flex gap-4 flex-wrap">
+            <a href="{% url 'reminders:add_reminder' %}" class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                ➕ Add New Reminder
+            </a>
+            <a href="{% url 'reminders:reminders_list' %}" class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                📋 View All Reminders
+            </a>
+            <a href="{% url 'reminders:history' %}" class="px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600">
+                📊 History
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+// Simple logging for debugging
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Dashboard loaded');
+});
+</script>
+
+{% endblock %}

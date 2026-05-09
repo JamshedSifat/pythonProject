@@ -1,0 +1,225 @@
+<!-- appointments/templates/appointments/appointment.html -->
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Book Appointment - Doctors{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-2">
+            <i class="fas fa-calendar-check text-blue-600"></i> Book Appointment
+        </h1>
+        <p class="text-gray-600 text-lg">Find and book appointments with our expert doctors</p>
+    </div>
+
+    <!-- Search Bar -->
+    <form action="{% url 'appointments:doctor_search' %}" method="get" class="mb-8">
+        <div class="flex gap-3 flex-wrap">
+            <input type="text" 
+                   name="q" 
+                   placeholder="Search doctors by name, specialty..."
+                   class="flex-1 min-w-64 px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                   value="{{ search_query|default:'' }}">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold transition hover:shadow-lg">
+                <i class="fas fa-search"></i> Search
+            </button>
+        </div>
+        
+        <!-- Quick Filters -->
+        <div class="mt-4 flex gap-2 flex-wrap">
+            <a href="{% url 'appointments:doctor_search' %}?q=available" 
+               class="px-4 py-2 bg-green-100 text-green-700 rounded-full hover:bg-green-200 font-semibold transition">
+                <i class="fas fa-check-circle"></i> Available
+            </a>
+            <a href="{% url 'appointments:top_doctors' %}" 
+               class="px-4 py-2 bg-yellow-100 text-yellow-700 rounded-full hover:bg-yellow-200 font-semibold transition">
+                <i class="fas fa-star"></i> Top Rated
+            </a>
+        </div>
+    </form>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg">
+            <p class="text-sm opacity-90 mb-1">Total Doctors</p>
+            <p class="text-4xl font-bold">{{ total_doctors }}</p>
+        </div>
+        
+        <div class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg">
+            <p class="text-sm opacity-90 mb-1">Available Now</p>
+            <p class="text-4xl font-bold">{{ doctors|length }}</p>
+        </div>
+        
+        <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6 shadow-lg">
+            <p class="text-sm opacity-90 mb-1">Quick Links</p>
+            <a href="{% url 'appointments:prescription_history' %}" class="text-white hover:text-purple-200 transition font-semibold flex items-center gap-2">
+                <i class="fas fa-prescription-bottle-alt"></i> My Prescriptions
+            </a>
+        </div>
+    </div>
+
+    {% if doctors %}
+        <!-- Doctors Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for doctor in doctors %}
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow card-hover border-t-4 border-blue-600">
+                    
+                    <!-- Header -->
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 text-center">
+                        {% if doctor.image %}
+                            <img src="{{ doctor.image.url }}" 
+                                 alt="{{ doctor.name }}" 
+                                 class="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-4 border-white shadow-lg">
+                        {% else %}
+                            <div class="w-24 h-24 rounded-full mx-auto mb-4 bg-gray-300 flex items-center justify-center text-4xl border-4 border-white">
+                                👨‍⚕️
+                            </div>
+                        {% endif %}
+                        
+                        <h2 class="text-2xl font-bold text-gray-800">{{ doctor.name }}</h2>
+                        <p class="text-gray-600 font-semibold">{{ doctor.specialty }}</p>
+                    </div>
+
+                    <!-- Rating -->
+                    {% if doctor.average_rating > 0 %}
+                        <div class="px-6 pt-4 text-center border-b pb-4">
+                            <div class="flex justify-center gap-1 mb-2">
+                                {% for i in "12345" %}
+                                    {% if i|add:"0" <= doctor.average_rating %}
+                                        <i class="fas fa-star text-yellow-400"></i>
+                                    {% else %}
+                                        <i class="fas fa-star text-gray-300"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <p class="font-bold text-gray-800">{{ doctor.average_rating|floatformat:1 }}/5 ({{ doctor.total_reviews }} reviews)</p>
+                        </div>
+                    {% endif %}
+
+                    <!-- Details -->
+                    <div class="p-6 space-y-3">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-600"><i class="fas fa-briefcase text-blue-600 mr-2"></i>Experience:</span>
+                            <span class="font-bold">{{ doctor.experience_years }} Years</span>
+                        </div>
+
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-600"><i class="fas fa-taka-sign text-green-600 mr-2"></i>Fee:</span>
+                            <span class="font-bold text-green-600">৳{{ doctor.cost }}</span>
+                        </div>
+
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-600"><i class="fas fa-chair text-purple-600 mr-2"></i>Available Seats:</span>
+                            <span class="font-bold">{{ doctor.available_spots }}</span>
+                        </div>
+
+                        {% if doctor.qualification %}
+                            <div class="text-sm pt-2 border-t">
+                                <span class="text-gray-600"><i class="fas fa-certificate text-yellow-600 mr-2"></i>Qualification:</span>
+                                <p class="font-semibold text-gray-800 mt-1">{{ doctor.qualification }}</p>
+                            </div>
+                        {% endif %}
+
+                        <!-- Status -->
+                        <div class="pt-2">
+                            {% if doctor.status and doctor.available_spots > 0 %}
+                                <span class="inline-block bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">
+                                    <i class="fas fa-check-circle mr-1"></i>Available
+                                </span>
+                            {% else %}
+                                <span class="inline-block bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">
+                                    <i class="fas fa-times-circle mr-1"></i>Unavailable
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="px-6 pb-6 flex gap-3 flex-wrap">
+                        <a href="{% url 'appointments:doctor_detail' doctor.id %}" 
+                           class="flex-1 text-center text-blue-600 border-2 border-blue-600 py-2 rounded-lg font-bold hover:bg-blue-50 transition">
+                            <i class="fas fa-eye mr-1"></i> View Profile
+                        </a>
+                        
+                        {% if doctor.status and doctor.available_spots > 0 and user.is_authenticated %}
+                            <a href="{% url 'appointments:create_appointment' doctor.id %}" 
+                               class="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold transition">
+                                <i class="fas fa-calendar-plus mr-1"></i> Book Now
+                            </a>
+                        {% elif not user.is_authenticated %}
+                            <a href="{% url 'accounts:login' %}" 
+                               class="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold transition">
+                                <i class="fas fa-sign-in-alt mr-1"></i> Login
+                            </a>
+                        {% else %}
+                            <button disabled 
+                                    class="flex-1 bg-gray-300 text-gray-600 py-2 rounded-lg font-bold cursor-not-allowed">
+                                Not Available
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-16 bg-white rounded-xl shadow-lg">
+            <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">No Doctors Found</h2>
+            <p class="text-gray-600 mb-6">Try adjusting your search filters</p>
+            <a href="{% url 'appointments:appointment' %}" 
+               class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-bold transition">
+                <i class="fas fa-redo mr-2"></i>Try Again
+            </a>
+        </div>
+    {% endif %}
+
+    <!-- User Quick Links -->
+    {% if user.is_authenticated %}
+        <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <a href="{% url 'appointments:prescription_history' %}" 
+               class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition text-center">
+                <i class="fas fa-prescription-bottle-alt text-4xl mb-3 block"></i>
+                <h3 class="text-xl font-bold mb-1">My Prescriptions</h3>
+                <p class="text-blue-100 text-sm">View and download prescriptions</p>
+            </a>
+
+            <a href="{% url 'appointments:medicine_reminder' %}" 
+               class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition text-center">
+                <i class="fas fa-bell text-4xl mb-3 block"></i>
+                <h3 class="text-xl font-bold mb-1">Medicine Reminder</h3>
+                <p class="text-green-100 text-sm">Never miss your medicines</p>
+            </a>
+
+            <a href="{% url 'accounts:user_profile' %}" 
+               class="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition text-center">
+                <i class="fas fa-user-md text-4xl mb-3 block"></i>
+                <h3 class="text-xl font-bold mb-1">My Appointments</h3>
+                <p class="text-purple-100 text-sm">View all your bookings</p>
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .card-hover {
+        animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}

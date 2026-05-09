@@ -1,0 +1,91 @@
+<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E0F2FE;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F0F9FF;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="400" height="300" fill="url(#bgGradient)"/>
+  
+  <!-- Hospital Building -->
+  <rect x="100" y="120" width="200" height="140" fill="#0284C7" stroke="#0C4A6E" stroke-width="2" rx="10"/>
+  
+  <!-- Roof -->
+  <polygon points="100,120 200,60 300,120" fill="#DC2626" stroke="#991B1B" stroke-width="2"/>
+  
+  <!-- Flag/Cross on roof -->
+  <rect x="195" y="50" width="10" height="15" fill="#FFFFFF"/>
+  <rect x="190" y="45" width="20" height="10" fill="#FFFFFF"/>
+  
+  <!-- Door -->
+  <rect x="185" y="230" width="30" height="30" fill="#5B21B6" stroke="#3F0F5C" stroke-width="2" rx="2"/>
+  <circle cx="210" cy="245" r="3" fill="#FFD700"/>
+  
+  <!-- Windows Row 1 -->
+  <g>
+    <rect x="120" y="140" width="25" height="25" fill="#7DD3FC" stroke="#0369A1" stroke-width="1"/>
+    <line x1="132.5" y1="140" x2="132.5" y2="165" stroke="#0369A1"/>
+    <line x1="120" y1="152.5" x2="145" y2="152.5" stroke="#0369A1"/>
+    
+    <rect x="160" y="140" width="25" height="25" fill="#7DD3FC" stroke="#0369A1" stroke-width="1"/>
+    <line x1="172.5" y1="140" x2="172.5" y2="165" stroke="#0369A1"/>
+    <line x1="160" y1="152.5" x2="185" y2="152.5" stroke="#0369A1"/>
+    
+    <rect x="200" y="140" width="25" height="25" fill="#7DD3FC" stroke="#0369A1" stroke-width="1"/>
+    <line x1="212.5" y1="140" x2="212.5" y2="165" stroke="#0369A1"/>
+    <line x1="200" y1="152.5" x2="225" y2="152.5" stroke="#0369A1"/>
+    
+    <rect x="240" y="140" width="25" height="25" fill="#7DD3FC" stroke="#0369A1" stroke-width="1"/>
+    <line x1="252.5" y1="140" x2="252.5" y2="165" stroke="#0369A1"/>
+    <line x1="240" y1="152.5" x2="265" y2="152.5" stroke="#0369A1"/>
+  </g>
+  
+  <!-- Windows Row 2 -->
+  <g>
+    <rect x="120" y="185" width="25" height="25" fill="#7DD3FC" stroke="#0369A1" stroke-width="1"/>
+    <line x1="132.5" y1="185" x2="132.5" y2="210" stroke="#0369A1"/>
+    <line x1="120" y1="197.5" x2="145" y2="197.5" stroke="#0369A1"/>
+    
+    <rect x="160" y="185" width="25" height="25" fill="#7DD3FC" stroke="#0369A1" stroke-width="1"/>
+    <line x1="172.5" y1="185" x2="172.5" y2="210" stroke="#0369A1"/>
+    <line x1="160" y1="197.5" x2="185" y2="197.5" stroke="#0369A1"/>
+    
+    <rect x="200" y="185" width="25" height="25" fill="#7DD3FC" stroke="#0369A1" stroke-width="1"/>
+    <line x1="212.5" y1="185" x2="212.5" y2="210" stroke="#0369A1"/>
+    <line x1="200" y1="197.5" x2="225" y2="197.5" stroke="#0369A1"/>
+    
+    <rect x="240" y="185" width="25" height="25" fill="#7DD3FC" stroke="#0369A1" stroke-width="1"/>
+    <line x1="252.5" y1="185" x2="252.5" y2="210" stroke="#0369A1"/>
+    <line x1="240" y1="197.5" x2="265" y2="197.5" stroke="#0369A1"/>
+  </g>
+  
+  <!-- Ambulance -->
+  <g>
+    <rect x="50" y="240" width="60" height="30" fill="#EF4444" stroke="#7F1D1D" stroke-width="2" rx="3"/>
+    <circle cx="65" cy="270" r="8" fill="#1F2937"/>
+    <circle cx="95" cy="270" r="8" fill="#1F2937"/>
+    
+    <!-- Cross on ambulance -->
+    <rect x="88" y="250" width="4" height="12" fill="white"/>
+    <rect x="84" y="254" width="12" height="4" fill="white"/>
+    
+    <!-- Window -->
+    <rect x="58" y="245" width="15" height="15" fill="#60A5FA"/>
+  </g>
+  
+  <!-- Medical Staff -->
+  <g>
+    <!-- Doctor -->
+    <circle cx="320" cy="100" r="12" fill="#FBBF24"/>
+    <rect x="308" y="115" width="24" height="20" fill="#F3F4F6" stroke="#1F2937" stroke-width="1"/>
+    <rect x="308" y="115" width="8" height="25" fill="#F3F4F6"/>
+    <rect x="324" y="115" width="8" height="25" fill="#F3F4F6"/>
+    <rect x="304" y="135" width="8" height="20" fill="#3B82F6"/>
+    <rect x="324" y="135" width="8" height="20" fill="#3B82F6"/>
+    
+    <!-- Heart icon -->
+    <path d="M 350 90 Q 355 85 360 90 Q 365 85 370 90 L 365 100 Q 360 105 360 105 Q 360 105 355 100 Z" fill="#EF4444"/>
+  </g>
+</svg>

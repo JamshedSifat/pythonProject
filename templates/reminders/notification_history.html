@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notification History{% endblock %}
+
+{% block extra-styles %}
+<script src="https://cdn.tailwindcss.com"></script>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-blue-50 py-12 px-4">
+    <div class="max-w-4xl mx-auto">
+        
+        <!-- Header -->
+        <div class="bg-blue-600 text-white rounded-lg p-8 mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">Notification History</h1>
+                    <p class="text-blue-100">View all your notifications</p>
+                </div>
+                <a href="{% url 'reminders:home' %}"
+                   class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded-lg transition">
+                    Back
+                </a>
+            </div>
+        </div>
+
+        <!-- Notifications List -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            {% if notifications %}
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-blue-100 border-b-2 border-blue-300">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-800">Type</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-800">Medicine</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-800">Status</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-800">Date</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-800">Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for notif in notifications %}
+                                <tr class="border-b hover:bg-blue-50 transition">
+                                    <td class="px-6 py-4">
+                                        {% if notif.notification_type == 'reminder' %}
+                                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">💊 Reminder</span>
+                                        {% elif notif.notification_type == 'missed_dose' %}
+                                            <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold">⚠️ Missed</span>
+                                        {% elif notif.notification_type == 'confirmation' %}
+                                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">✓ Confirmation</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-800">
+                                        {% if notif.medicine %}
+                                            {{ notif.medicine.name }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        {% if notif.status == 'sent' %}
+                                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">✓ Sent</span>
+                                        {% elif notif.status == 'failed' %}
+                                            <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold">✗ Failed</span>
+                                        {% elif notif.status == 'pending' %}
+                                            <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-semibold">⏳ Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-600 text-sm">
+                                        {{ notif.created_at|date:"M d, Y H:i" }}
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-700 text-sm">
+                                        {{ notif.message|truncatewords:10 }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-8 text-center">
+                    <p class="text-gray-500 text-lg">No notifications yet</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+            <div class="bg-white rounded-lg shadow p-6 text-center">
+                <p class="text-gray-600 text-sm mb-2">Total Notifications</p>
+                <p class="text-3xl font-bold text-blue-600">{{ notifications|length }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6 text-center">
+                <p class="text-gray-600 text-sm mb-2">Sent</p>
+                <p class="text-3xl font-bold text-green-600">
+                    {% load url %}
+                    {% widthratio notifications|length 1 1 %}
+                </p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6 text-center">
+                <p class="text-gray-600 text-sm mb-2">Failed</p>
+                <p class="text-3xl font-bold text-red-600">0</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
