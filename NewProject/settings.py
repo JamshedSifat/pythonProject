@@ -8,6 +8,14 @@ SECRET_KEY = 'django-insecure-u8pcu(+%6ff=i7-_^mm2^q_7$id_b(nn2wo8i7+(s+(eu3sc-u
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
+CSRF_TRUSTED_ORIGINS = [
+    'https://smarthealthcaresystems.onrender.com',
+    'https://*.onrender.com',  
+]
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'None'  # Cross-origin request এর জন্য
+SESSION_COOKIE_SAMESITE = 'None'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
