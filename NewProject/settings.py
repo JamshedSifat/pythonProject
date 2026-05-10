@@ -9,7 +9,8 @@ SECRET_KEY = os.environ.get(
     "django-insecure-change-this-in-production"
 )
 
-DEBUG = False
+# TEMPORARY TRUE for media/images on Render
+DEBUG = True
 
 ALLOWED_HOSTS = [
     "smarthealthcaresystems.onrender.com",
@@ -119,7 +120,6 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# WhiteNoise static compression
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files

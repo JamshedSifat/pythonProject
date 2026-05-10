@@ -27230,3 +27230,5 @@ INFO 2026-05-09 10:27:59,692 log 21188 23496 "GET /appointments/prescriptions/ H
 INFO 2026-05-09 10:28:04,611 log 21188 23496 "GET /appointments/top-doctors/ HTTP/1.1" 200 26749
 INFO 2026-05-10 19:52:31,172 autoreload 17196 20500 Watching for file changes with StatReloader
 INFO 2026-05-10 19:53:08,174 autoreload 17196 20500 C:\Users\mdjam\OneDrive\Desktop\Smart HealthCare\Smart HealthCare\NewProject\settings.py changed, reloading.
+INFO 2026-05-10 19:59:46,822 autoreload 15864 19192 Watching for file changes with StatReloader
+INFO 2026-05-10 19:59:49,742 autoreload 15864 19192 C:\Users\mdjam\OneDrive\Desktop\Smart HealthCare\Smart HealthCare\NewProject\settings.py changed, reloading.
