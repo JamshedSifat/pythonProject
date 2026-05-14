@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Patient Medical History{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-8 px-4">
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 mb-8 text-white">
+        <div class="flex justify-between flex-wrap gap-4"><div><h1 class="text-3xl font-bold mb-2"><i class="fas fa-notes-medical mr-2"></i> Patient Medical History</h1><p>{{ patient.get_full_name|default:patient.username }}</p><p class="text-sm">{{ patient.email }} | {{ patient.profile.mobile|default:"No phone" }}</p></div><div class="flex gap-3"><button onclick="openMedicalModal()" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold"><i class="fas fa-edit"></i> Edit History</button></div></div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow-md p-4 border-l-4 border-blue-500"><p class="text-gray-500 text-sm">Total Appointments</p><p class="text-2xl font-bold">{{ total_appointments }}</p></div>
+        <div class="bg-white rounded-xl shadow-md p-4 border-l-4 border-green-500"><p class="text-gray-500 text-sm">Prescriptions</p><p class="text-2xl font-bold">{{ total_prescriptions }}</p></div>
+        <div class="bg-white rounded-xl shadow-md p-4 border-l-4 border-purple-500"><p class="text-gray-500 text-sm">Age</p><p class="text-2xl font-bold">{{ patient.profile.age|default:"N/A" }}</p></div>
+        <div class="bg-white rounded-xl shadow-md p-4 border-l-4 border-red-500"><p class="text-gray-500 text-sm">Blood Group</p><p class="text-2xl font-bold">{{ medical_history.blood_group|default:"N/A" }}</p></div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden"><div class="bg-gray-50 px-6 py-3 border-b"><h2 class="font-bold"><i class="fas fa-stethoscope text-blue-600 mr-2"></i> Medical Information</h2></div><div class="p-6"><div class="grid grid-cols-2 gap-4"><div><p class="text-gray-500 text-sm">Blood Group</p><p class="font-semibold">{{ medical_history.blood_group|default:"Not specified" }}</p></div><div><p class="text-gray-500 text-sm">Height/Weight</p><p class="font-semibold">{{ medical_history.height|default:"?" }} cm / {{ medical_history.weight|default:"?" }} kg</p></div><div><p class="text-gray-500 text-sm">Blood Pressure</p><p class="font-semibold">{{ medical_history.blood_pressure|default:"Not recorded" }}</p></div><div><p class="text-gray-500 text-sm">Allergies</p><p class="font-semibold">{{ medical_history.allergies|default:"None" }}</p></div><div class="col-span-2"><p class="text-gray-500 text-sm">Chronic Diseases</p><p class="font-semibold">{{ medical_history.chronic_diseases|default:"None" }}</p></div></div></div></div>
+        </div>
+        <div><div class="bg-white rounded-xl shadow-md overflow-hidden"><div class="bg-red-50 px-6 py-3 border-b"><h2 class="font-bold text-red-700"><i class="fas fa-phone-alt mr-2"></i> Emergency Contact</h2></div><div class="p-6"><p class="font-semibold">{{ medical_history.emergency_contact_name|default:"Not set" }}</p><p>{{ medical_history.emergency_contact_number|default:"" }}</p><p class="text-gray-500 text-sm">{{ medical_history.emergency_contact_relation|default:"" }}</p></div></div></div>
+    </div>
+</div>
+
+<div id="medicalModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"><div class="bg-white rounded-xl max-w-2xl w-full mx-4"><div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 rounded-t-xl flex justify-between"><h3 class="text-xl font-bold text-white">Edit Medical History</h3><button onclick="closeMedicalModal()" class="text-white text-2xl">&times;</button></div><form method="post" class="p-6">{% csrf_token %}<div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-semibold">Blood Group</label><select name="blood_group" class="w-full px-3 py-2 border rounded-lg"><option value="">Select</option><option {% if medical_history.blood_group == 'A+' %}selected{% endif %}>A+</option><option {% if medical_history.blood_group == 'A-' %}selected{% endif %}>A-</option><option {% if medical_history.blood_group == 'B+' %}selected{% endif %}>B+</option><option {% if medical_history.blood_group == 'B-' %}selected{% endif %}>B-</option><option {% if medical_history.blood_group == 'O+' %}selected{% endif %}>O+</option><option {% if medical_history.blood_group == 'O-' %}selected{% endif %}>O-</option><option {% if medical_history.blood_group == 'AB+' %}selected{% endif %}>AB+</option><option {% if medical_history.blood_group == 'AB-' %}selected{% endif %}>AB-</option></select></div><div><label class="block text-sm font-semibold">Height (cm)</label><input type="number" name="height" value="{{ medical_history.height }}" class="w-full px-3 py-2 border rounded-lg"></div><div><label class="block text-sm font-semibold">Weight (kg)</label><input type="number" name="weight" value="{{ medical_history.weight }}" class="w-full px-3 py-2 border rounded-lg"></div><div><label class="block text-sm font-semibold">Blood Pressure</label><input type="text" name="blood_pressure" value="{{ medical_history.blood_pressure }}" class="w-full px-3 py-2 border rounded-lg"></div><div class="col-span-2"><label class="block text-sm font-semibold">Allergies</label><textarea name="allergies" rows="2" class="w-full px-3 py-2 border rounded-lg">{{ medical_history.allergies }}</textarea></div><div class="col-span-2"><label class="block text-sm font-semibold">Chronic Diseases</label><textarea name="chronic_diseases" rows="2" class="w-full px-3 py-2 border rounded-lg">{{ medical_history.chronic_diseases }}</textarea></div></div><div class="flex gap-3 mt-6"><button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold">Save Changes</button><button type="button" onclick="closeMedicalModal()" class="flex-1 bg-gray-300 py-2 rounded-lg font-semibold">Cancel</button></div></form></div></div>
+
+<script>
+function openMedicalModal() { document.getElementById('medicalModal').classList.remove('hidden'); document.getElementById('medicalModal').classList.add('flex'); }
+function closeMedicalModal() { document.getElementById('medicalModal').classList.add('hidden'); document.getElementById('medicalModal').classList.remove('flex'); }
+</script>
+{% endblock %}

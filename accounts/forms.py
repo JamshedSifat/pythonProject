@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from .models import UserProfile
 
+
 class UserForm(forms.ModelForm):
     class Meta:
         model = User
@@ -12,6 +13,7 @@ class UserForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={'class': 'w-full px-4 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-blue-300'}),
         }
 
+
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
@@ -21,4 +23,20 @@ class UserProfileForm(forms.ModelForm):
             'address': forms.TextInput(attrs={'class': 'w-full px-4 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-blue-300'}),
             'mobile': forms.TextInput(attrs={'class': 'w-full px-4 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-blue-300'}),
             'gender': forms.Select(attrs={'class': 'w-full px-4 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-blue-300'}),
+        }
+
+
+class DoctorMedicalInfoForm(forms.ModelForm):
+    """Doctor's medical practice information"""
+    class Meta:
+        from appointments.models import Doctor
+        model = Doctor
+        fields = ['specialty', 'cost', 'experience_years', 'qualification', 'bio', 'image']
+        widgets = {
+            'specialty': forms.TextInput(attrs={'class': 'w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500'}),
+            'cost': forms.NumberInput(attrs={'class': 'w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500'}),
+            'experience_years': forms.NumberInput(attrs={'class': 'w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500'}),
+            'qualification': forms.TextInput(attrs={'class': 'w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500'}),
+            'bio': forms.Textarea(attrs={'rows': 4, 'class': 'w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500'}),
+            'image': forms.ClearableFileInput(attrs={'class': 'w-full px-4 py-2 rounded-lg border'}),
         }

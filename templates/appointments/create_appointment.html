@@ -1,5 +1,3 @@
-
-
 {% extends 'base.html' %}
 {% load static %}
 
@@ -8,134 +6,100 @@
 {% block content %}
 <div class="max-w-2xl mx-auto px-4 py-8">
     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <!-- Header -->
         <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-8 text-white">
-            <h1 class="text-3xl font-bold mb-2">
-                <i class="fas fa-calendar-check"></i> Appointment Booking
-            </h1>
+            <h1 class="text-3xl font-bold mb-2"><i class="fas fa-calendar-check"></i> Appointment Booking</h1>
             <p class="text-gray-200">Schedule an appointment with Dr. {{ doctor.name }}</p>
         </div>
-
-        <!-- Doctor Info Card -->
+        
+        <!-- Doctor Info with Available Slots -->
         <div class="p-6 bg-gray-50 border-b">
             <div class="flex items-center gap-4">
                 {% if doctor.image %}
-                    <img src="{{ doctor.image.url }}" 
-                         alt="{{ doctor.name }}" 
-                         class="w-16 h-16 rounded-full object-cover">
+                    <img src="{{ doctor.image.url }}" class="w-16 h-16 rounded-full object-cover">
                 {% else %}
-                    <div class="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center text-2xl">
-                        👨‍⚕️
-                    </div>
+                    <div class="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center text-2xl">👨‍⚕️</div>
                 {% endif %}
-                
                 <div class="flex-1">
                     <h2 class="text-lg font-bold text-gray-800">{{ doctor.name }}</h2>
                     <p class="text-gray-600">{{ doctor.specialty }}</p>
                     <p class="text-sm text-gray-500">Consultation Fee: <span class="font-bold text-green-600">৳{{ doctor.cost }}</span></p>
                 </div>
             </div>
+            
+            <!-- Available Slots Display -->
+            <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-sm text-blue-700">
+                            <i class="fas fa-calendar-day mr-1"></i> Today's Status
+                        </p>
+                        <p class="text-2xl font-bold text-blue-800">{{ remaining_spots }}/{{ doctor.daily_max_patients }}</p>
+                        <p class="text-xs text-blue-600">spots available today</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-600">Already Booked</p>
+                        <p class="text-xl font-bold text-orange-600">{{ today_booked }}</p>
+                    </div>
+                </div>
+                <div class="mt-2 w-full bg-blue-200 rounded-full h-2">
+                    <div class="bg-blue-600 rounded-full h-2" style="width: {% widthratio today_booked doctor.daily_max_patients 100 %}%"></div>
+                </div>
+            </div>
         </div>
-
-        <!-- Form -->
+        
         <form method="post" class="p-8 space-y-6">
             {% csrf_token %}
-
+            
             <!-- Date Selection -->
             <div>
-                <label for="appointment_date" class="block text-lg font-bold text-gray-800 mb-3">
+                <label class="block text-lg font-bold text-gray-800 mb-3">
                     <i class="fas fa-calendar"></i> Select Appointment Date *
                 </label>
-                
                 <input type="date" 
-                       id="appointment_date" 
                        name="appointment_date" 
+                       id="appointment_date"
                        required
                        min="{% now 'Y-m-d' %}"
-                       class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
-                       onchange="updateTimeSlots()">
-                
-                <div id="dateError" class="mt-2 text-red-600 text-sm hidden"></div>
-                <p class="mt-2 text-sm text-gray-500">
-                    <i class="fas fa-info-circle"></i> Choose a date within the next 60 days
-                </p>
+                       class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-600">
+                <p class="text-xs text-gray-500 mt-1">Select a date to check availability</p>
             </div>
-
-            <!-- Time Slot Selection -->
+            
+            <!-- Time Slot Selection (Optional - যদি টাইম স্লট সিস্টেম ব্যবহার করেন) -->
+            {% if doctor.time_slots.exists %}
             <div>
-                <label for="appointment_time" class="block text-lg font-bold text-gray-800 mb-3">
+                <label class="block text-lg font-bold text-gray-800 mb-3">
                     <i class="fas fa-clock"></i> Select Time Slot *
                 </label>
-                
-                <select id="appointment_time"
-                        name="appointment_time"
-                        required
-                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent">
-                    <option value="">-- Select Time Slot --</option>
+                <select name="appointment_time" id="appointment_time" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg">
+                    <option value="">-- First select a date --</option>
                     {% for slot in doctor.time_slots.all %}
-                        <option value="{{ slot.id }}">
-                            {{ slot.get_day_of_week_display }} - {{ slot.start_time|time:"H:i" }} to {{ slot.end_time|time:"H:i" }}
+                        <option value="{{ slot.id }}" data-day="{{ slot.day_of_week }}">
+                            {{ slot.get_day_of_week_display }} - {{ slot.start_time|time:"h:i A" }} to {{ slot.end_time|time:"h:i A" }}
                         </option>
                     {% endfor %}
                 </select>
-
-                <div id="slotLoading" class="mt-2 text-blue-600 text-sm hidden">
-                    <i class="fas fa-spinner fa-spin"></i> Loading slots...
-                </div>
-                <div id="slotError" class="mt-2 text-red-600 text-sm hidden"></div>
-
-                <p class="mt-2 text-sm text-gray-500">
-                    <i class="fas fa-info-circle"></i> Choose from available time slots
-                </p>
             </div>
-
+            {% endif %}
+            
             <!-- Description -->
             <div>
-                <label for="description" class="block text-lg font-bold text-gray-800 mb-3">
+                <label class="block text-lg font-bold text-gray-800 mb-3">
                     <i class="fas fa-file-medical"></i> Describe Your Problem *
                 </label>
-                
-                <textarea id="description"
-                          name="description"
-                          rows="5"
-                          maxlength="1000"
-                          required
+                <textarea name="description" rows="5" maxlength="1000" required
                           placeholder="Describe your problem, symptoms, and medical history..."
-                          class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent resize-none"></textarea>
-                
-                <div class="mt-2 flex justify-between text-xs text-gray-500">
-                    <span>This will help the doctor provide better service</span>
-                    <span id="descCount">0/1000</span>
-                </div>
+                          class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg resize-none"></textarea>
             </div>
-
-            <!-- Important Info -->
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
-                <p class="font-bold text-blue-900 mb-2">
-                    <i class="fas fa-check-circle"></i> Important Information
-                </p>
-                <ul class="text-sm text-blue-700 space-y-1">
-                    <li>✓ Cancel appointment 24 hours in advance</li>
-                    <li>✓ Try to arrive on time</li>
-                    <li>✓ Bring necessary documents</li>
-                    <li>✓ Provide emergency contact details to confirm booking</li>
-                </ul>
-            </div>
-
-            <!-- Cost Summary -->
-            <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 p-4 rounded-lg">
-                <p class="text-sm text-gray-600 mb-2">Total Cost</p>
-                <p class="text-3xl font-bold text-green-600">৳{{ doctor.cost }}</p>
-                <p class="text-xs text-gray-500 mt-1">Payment will be made at the time of appointment</p>
-            </div>
-
+            
+            <!-- Availability Check Result -->
+            <div id="availability_result" class="hidden p-3 rounded-lg"></div>
+            
             <!-- Buttons -->
             <div class="flex gap-3 pt-4">
-                <button type="submit" class="flex-1 bg-blue-500 text-white py-3 rounded-lg font-bold hover:shadow-lg transition">
+                <button type="submit" id="submit_btn" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-bold transition">
                     <i class="fas fa-check"></i> Confirm Appointment
                 </button>
-                <a href="{% url 'appointments:doctor_detail' doctor.id %}" 
-                   class="flex-1 text-center bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300 transition">
+                <a href="{% url 'appointments:doctor_detail' doctor.id %}" class="flex-1 text-center bg-gray-200 text-gray-700 py-3 rounded-lg font-bold transition">
                     <i class="fas fa-arrow-left"></i> Go Back
                 </a>
             </div>
@@ -144,33 +108,40 @@
 </div>
 
 <script>
-    // Description character counter
-    const textarea = document.querySelector('textarea[name="description"]');
-    const descCount = document.getElementById('descCount');
-    
-    if (textarea) {
-        textarea.addEventListener('input', function() {
-            descCount.textContent = this.value.length + '/1000';
-        });
-        descCount.textContent = textarea.value.length + '/1000';
-    }
-
-    // Update time slots based on date
-    function updateTimeSlots() {
-        const dateInput = document.getElementById('appointment_date');
-        const slotLoading = document.getElementById('slotLoading');
-        const slotError = document.getElementById('slotError');
+    // Date selection এর জন্য availability check
+    document.getElementById('appointment_date').addEventListener('change', function() {
+        const selectedDate = this.value;
+        const doctorId = {{ doctor.id }};
+        const resultDiv = document.getElementById('availability_result');
+        const submitBtn = document.getElementById('submit_btn');
         
-        if (!dateInput.value) return;
-        
-        slotLoading.classList.remove('hidden');
-        slotError.classList.add('hidden');
-        
-        // Here you can make AJAX call for available slots
-        // For now just showing loading
-        setTimeout(() => {
-            slotLoading.classList.add('hidden');
-        }, 500);
-    }
+        if (selectedDate) {
+            fetch(`/appointments/check-availability/${doctorId}/?date=${selectedDate}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.available) {
+                        resultDiv.innerHTML = `
+                            <div class="bg-green-100 border-l-4 border-green-500 p-3">
+                                <i class="fas fa-check-circle text-green-600"></i>
+                                <span class="text-green-700 font-semibold">Available!</span>
+                                <p class="text-sm text-green-600 mt-1">${data.remaining_spots} spots remaining on this date</p>
+                            </div>
+                        `;
+                        resultDiv.classList.remove('hidden');
+                        submitBtn.disabled = false;
+                    } else {
+                        resultDiv.innerHTML = `
+                            <div class="bg-red-100 border-l-4 border-red-500 p-3">
+                                <i class="fas fa-times-circle text-red-600"></i>
+                                <span class="text-red-700 font-semibold">Fully Booked!</span>
+                                <p class="text-sm text-red-600 mt-1">No spots available on this date. Max ${data.max_patients} patients per day.</p>
+                            </div>
+                        `;
+                        resultDiv.classList.remove('hidden');
+                        submitBtn.disabled = true;
+                    }
+                });
+        }
+    });
 </script>
 {% endblock %}

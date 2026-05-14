@@ -1,21 +1,23 @@
 # appointments/admin.py
 
 from django.contrib import admin
-from .models import Doctor, DoctorReview, DoctorTimeSlot, Appointment, Prescription, Hospital, Blood, Medicine
+from .models import Doctor, DoctorReview, DoctorTimeSlot, Appointment, Prescription, Hospital, Blood, Medicine, PatientMedicalHistory, VitalSign, DoctorHoliday
 
 
 @admin.register(Doctor)
 class DoctorAdmin(admin.ModelAdmin):
-    list_display = ['name', 'specialty', 'experience_years', 'cost', 'available_spots', 'status', 'average_rating']
+    list_display = ['name', 'specialty', 'daily_max_patients', 'cost', 'status', 'average_rating']  # available_spots -> daily_max_patients
     list_filter = ['specialty', 'status', 'created_at']
     search_fields = ['name', 'specialty', 'qualification']
+    list_editable = ['daily_max_patients', 'cost', 'status']  # available_spots -> daily_max_patients
     readonly_fields = ['average_rating', 'total_reviews', 'created_at']
     fieldsets = (
         ('Personal Information', {
             'fields': ('user', 'name', 'specialty', 'experience_years', 'qualification', 'bio', 'image')
         }),
-        ('Services', {
-            'fields': ('cost', 'available_spots', 'status', 'next_available_appointment_date')
+        ('Practice Settings', {
+            'fields': ('cost', 'daily_max_patients', 'status'),  # available_spots -> daily_max_patients
+            'description': 'Set your consultation fee and daily patient capacity'
         }),
         ('Ratings', {
             'fields': ('average_rating', 'total_reviews'),
@@ -33,7 +35,6 @@ class MedicineAdmin(admin.ModelAdmin):
     list_display = ['name', 'dosage', 'frequency', 'duration', 'created_at']
     list_filter = ['created_at', 'frequency']
     search_fields = ['name', 'dosage']
-    readonly_fields = ['created_at']
 
 
 @admin.register(DoctorReview)
@@ -41,14 +42,13 @@ class DoctorReviewAdmin(admin.ModelAdmin):
     list_display = ['doctor', 'user', 'rating', 'created_at']
     list_filter = ['doctor', 'rating', 'created_at']
     search_fields = ['doctor__name', 'user__username', 'comment']
-    readonly_fields = ['created_at', 'updated_at']
 
 
 @admin.register(DoctorTimeSlot)
 class DoctorTimeSlotAdmin(admin.ModelAdmin):
-    list_display = ['doctor', 'get_day_display', 'start_time', 'end_time']
+    list_display = ['doctor', 'get_day_display', 'start_time', 'end_time', 'max_patients']
     list_filter = ['doctor', 'day_of_week']
-    search_fields = ['doctor__name']
+    list_editable = ['max_patients']
     
     def get_day_display(self, obj):
         return obj.get_day_of_week_display()
@@ -61,18 +61,6 @@ class AppointmentAdmin(admin.ModelAdmin):
     list_filter = ['appointment_date', 'doctor', 'status', 'created_at']
     search_fields = ['user__username', 'doctor__name']
     readonly_fields = ['created_at', 'updated_at', 'serial_number']
-    fieldsets = (
-        ('Appointment Information', {
-            'fields': ('user', 'doctor', 'doctor_time_slot', 'appointment_date', 'serial_number')
-        }),
-        ('Details', {
-            'fields': ('description', 'status')
-        }),
-        ('Metadata', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
 
 
 @admin.register(Prescription)
@@ -82,18 +70,27 @@ class PrescriptionAdmin(admin.ModelAdmin):
     search_fields = ['patient__username', 'doctor__name', 'diagnosis']
     readonly_fields = ['created_at', 'updated_at']
     filter_horizontal = ['medicines']
-    fieldsets = (
-        ('Information', {
-            'fields': ('appointment', 'doctor', 'patient')
-        }),
-        ('Details', {
-            'fields': ('diagnosis', 'medicines', 'notes')
-        }),
-        ('Metadata', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
+
+
+@admin.register(PatientMedicalHistory)
+class PatientMedicalHistoryAdmin(admin.ModelAdmin):
+    list_display = ['patient', 'doctor', 'blood_group', 'updated_at']
+    list_filter = ['blood_group', 'smoking', 'alcohol']
+    search_fields = ['patient__username', 'patient__email']
+
+
+@admin.register(VitalSign)
+class VitalSignAdmin(admin.ModelAdmin):
+    list_display = ['patient', 'doctor', 'recorded_at', 'heart_rate', 'blood_pressure_systolic']
+    list_filter = ['recorded_at']
+    search_fields = ['patient__username']
+
+
+@admin.register(DoctorHoliday)
+class DoctorHolidayAdmin(admin.ModelAdmin):
+    list_display = ['doctor', 'date', 'reason', 'is_full_day']
+    list_filter = ['date', 'is_full_day']
+    search_fields = ['doctor__name']
 
 
 @admin.register(Hospital)
