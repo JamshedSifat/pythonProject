@@ -222,6 +222,7 @@ def medicine_detail(request, medicine_id):
 
 
 # ============ MEAL PLANNING ============
+
 @login_required
 def meal_plan(request):
     """View meal plans"""
@@ -236,14 +237,24 @@ def meal_plan(request):
     except:
         pass
     
+    # Calculate remaining calories
+    remaining = daily_need - total_calories
+    
+    # Calculate progress percentage
+    if daily_need > 0:
+        progress_percent = int((total_calories / daily_need) * 100)
+    else:
+        progress_percent = 0
+    
     context = {
         'meals': meals,
-        'total_calories': total_calories,
+        'total_calories': int(total_calories),
         'daily_need': daily_need,
+        'remaining': remaining,
+        'progress_percent': progress_percent if progress_percent <= 100 else 100,
     }
     
     return render(request, 'diet_compatibility/meal_plan.html', context)
-
 
 @login_required
 def create_meal(request):
@@ -333,7 +344,7 @@ def update_daily_log(request):
 # ============ CALORIE COUNTER ============
 @login_required
 def calorie_counter(request):
-    """Calorie counter"""
+    """Calorie counter with proper remaining calculation"""
     today = timezone.now().date()
     meals = MealPlan.objects.filter(user=request.user, date=today)
     
@@ -349,18 +360,20 @@ def calorie_counter(request):
     daily_need = 2000
     try:
         daily_need = request.user.health_profile.calculate_daily_calorie_need()
-    except:
+    except HealthProfile.DoesNotExist:
         pass
+    
+    # Calculate remaining properly (can be negative)
+    remaining = daily_need - total_calories
     
     context = {
         'calories_by_meal': calories_by_meal,
-        'total_calories': total_calories,
+        'total_calories': int(total_calories),
         'daily_need': daily_need,
-        'remaining': max(0, daily_need - total_calories),
+        'remaining': remaining,  # This can be negative now
     }
     
     return render(request, 'diet_compatibility/calorie_counter.html', context)
-
 
 # ============ DIET COMPATIBILITY ============
 @login_required

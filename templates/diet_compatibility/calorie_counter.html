@@ -13,6 +13,33 @@
     <p class="text-gray-600">Track your daily calorie intake and manage your diet</p>
 </div>
 
+<!-- Overeating Alert (Shown when calories exceed daily need) -->
+{% if remaining < 0 %}
+<div class="mb-6 bg-red-100 border-l-4 border-red-600 text-red-700 p-4 rounded-lg shadow-md animate-pulse" role="alert">
+    <div class="flex items-center gap-3">
+        <i class="fas fa-exclamation-triangle text-2xl text-red-600"></i>
+        <div>
+            <p class="font-bold text-lg">⚠️ Warning: You have exceeded your daily calorie limit!</p>
+            <p class="text-sm">
+                You have consumed <strong class="text-red-800">{{ remaining|slice:"1:" }}</strong> kcal 
+                <strong>more</strong> than your daily need (Daily need: {{ daily_need }} kcal, Consumed: {{ total_calories }} kcal).
+            </p>
+            <p class="text-xs mt-1 text-red-600">🔔 Excess calorie intake may lead to weight gain. Please control your portion sizes.</p>
+        </div>
+    </div>
+</div>
+{% elif remaining < 200 and remaining >= 0 %}
+<div class="mb-6 bg-yellow-100 border-l-4 border-yellow-600 text-yellow-700 p-4 rounded-lg shadow-md">
+    <div class="flex items-center gap-3">
+        <i class="fas fa-clock text-xl text-yellow-600"></i>
+        <div>
+            <p class="font-bold">⚠️ Warning: You are close to your daily calorie limit!</p>
+            <p class="text-sm">You only have <strong class="text-yellow-800">{{ remaining }}</strong> kcal remaining.</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Main Stats -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     
@@ -30,11 +57,25 @@
         <p class="text-sm mt-3 opacity-90">calories needed</p>
     </div>
 
-    <!-- Remaining -->
-    <div class="{% if remaining > 0 %}bg-gradient-to-br from-blue-500 to-cyan-600{% else %}bg-gradient-to-br from-red-500 to-pink-600{% endif %} text-white rounded-xl p-8 shadow-lg">
+    <!-- Remaining (Dynamic Color based on overeating) -->
+    <div class="{% if remaining < 0 %}bg-gradient-to-br from-red-600 to-red-800{% elif remaining < 200 %}bg-gradient-to-br from-orange-500 to-red-600{% else %}bg-gradient-to-br from-blue-500 to-cyan-600{% endif %} text-white rounded-xl p-8 shadow-lg transition-all duration-300">
         <p class="text-sm opacity-90 mb-2"><i class="fas fa-balance-scale mr-2"></i>Remaining</p>
-        <p class="text-5xl font-bold">{{ remaining }}</p>
-        <p class="text-sm mt-3 opacity-90">{% if remaining > 0 %}you can eat{% else %}over goal{% endif %}</p>
+        <p class="text-5xl font-bold {% if remaining < 0 %}line-through{% endif %}">
+            {% if remaining < 0 %}
+                +{{ remaining|slice:"1:" }}
+            {% else %}
+                {{ remaining }}
+            {% endif %}
+        </p>
+        <p class="text-sm mt-3 opacity-90">
+            {% if remaining < 0 %}
+                ⚠️ Excess calories consumed
+            {% elif remaining == 0 %}
+                🎯 Exactly on target!
+            {% else %}
+                calories left to eat
+            {% endif %}
+        </p>
     </div>
 </div>
 
@@ -44,15 +85,30 @@
     
     <div class="mb-4">
         <div class="w-full bg-gray-200 rounded-full h-8 overflow-hidden">
-            <div class="bg-gradient-to-r from-orange-500 to-red-600 h-full rounded-full transition-all flex items-center justify-center text-white font-bold text-sm"
-                 style="width: {% widthratio total_calories daily_need 100 %}%;">
-                {% if daily_need > 0 %}{% widthratio total_calories daily_need 100 %}%{% endif %}
+            {% widthratio total_calories daily_need 100 as progress_percent %}
+            <div class="h-full rounded-full transition-all duration-500 flex items-center justify-center text-white font-bold text-sm
+                        {% if total_calories > daily_need %}bg-gradient-to-r from-red-600 to-red-800
+                        {% else %}bg-gradient-to-r from-orange-500 to-red-600{% endif %}"
+                 style="width: {% if progress_percent > 100 %}100{% else %}{{ progress_percent }}{% endif %}%;">
+                {% if progress_percent > 100 %}
+                    🔥 {{ progress_percent }}% (Over Limit)
+                {% elif progress_percent < 100 %}
+                    {{ progress_percent }}%
+                {% else %}
+                    ✅ 100%
+                {% endif %}
             </div>
         </div>
     </div>
 
     <p class="text-gray-600">
-        You've consumed <strong>{{ total_calories }}</strong> out of <strong>{{ daily_need }}</strong> recommended calories.
+        {% if total_calories > daily_need %}
+            <span class="text-red-600 font-bold">
+                ⚠️ You have consumed <strong>{{ total_calories|add:daily_need|stringformat:"d"|slice:"1:" }}</strong> kcal MORE than your daily requirement!
+            </span>
+        {% else %}
+            You've consumed <strong>{{ total_calories }}</strong> out of <strong>{{ daily_need }}</strong> recommended calories.
+        {% endif %}
     </p>
 </div>
 
@@ -90,20 +146,30 @@
         {% endif %}
     </div>
 
-    <!-- Tips -->
+    <!-- Tips (Dynamic based on overeating status) -->
     <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-lg p-8 border-l-4 border-blue-600">
         <h3 class="text-2xl font-bold text-gray-800 mb-6">
             <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>Calorie Tips
         </h3>
 
         <ul class="space-y-4 text-sm text-gray-700">
+            {% if total_calories > daily_need %}
+                <li class="flex gap-3 bg-red-50 p-3 rounded-lg">
+                    <i class="fas fa-exclamation-triangle text-red-600 mt-1 flex-shrink-0"></i>
+                    <span><strong>Overeating detected!</strong> Try light exercise like walking to balance extra calories.</span>
+                </li>
+                <li class="flex gap-3">
+                    <i class="fas fa-apple-alt text-green-600 mt-1 flex-shrink-0"></i>
+                    <span><strong>Tomorrow's tip:</strong> Start with a light breakfast to reset your appetite.</span>
+                </li>
+            {% endif %}
             <li class="flex gap-3">
                 <i class="fas fa-check text-green-600 mt-1 flex-shrink-0"></i>
                 <span><strong>Eat slowly:</strong> It takes 20 minutes to feel full</span>
             </li>
             <li class="flex gap-3">
                 <i class="fas fa-check text-green-600 mt-1 flex-shrink-0"></i>
-                <span><strong>Stay hydrated:</strong> Drink water before meals</span>
+                <span><strong>Stay hydrated:</strong> Drink water before meals to reduce overeating</span>
             </li>
             <li class="flex gap-3">
                 <i class="fas fa-check text-green-600 mt-1 flex-shrink-0"></i>
@@ -117,13 +183,28 @@
                 <i class="fas fa-check text-green-600 mt-1 flex-shrink-0"></i>
                 <span><strong>Track everything:</strong> Even small snacks add up</span>
             </li>
-            <li class="flex gap-3">
-                <i class="fas fa-check text-green-600 mt-1 flex-shrink-0"></i>
-                <span><strong>Balance macros:</strong> Carbs, protein, and fats matter</span>
-            </li>
         </ul>
     </div>
 </div>
+
+<!-- Overeating Warning Card (if calories exceed daily need) -->
+{% if remaining < 0 %}
+<div class="mt-8 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl p-6 shadow-lg">
+    <div class="flex items-center justify-between flex-wrap gap-4">
+        <div class="flex items-center gap-4">
+            <i class="fas fa-chart-line text-4xl"></i>
+            <div>
+                <h4 class="text-xl font-bold">📊 Weekly Calorie Review</h4>
+                <p class="text-sm text-red-100">You have exceeded your daily calorie target today</p>
+            </div>
+        </div>
+        <div class="bg-white/20 px-6 py-3 rounded-lg text-center">
+            <p class="text-2xl font-bold">+{{ remaining|slice:"1:" }} kcal</p>
+            <p class="text-xs">Excess consumed</p>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- Action Button -->
 <div class="mt-8 text-center">
