@@ -85,8 +85,6 @@ class DoctorReview(models.Model):
     def __str__(self):
         return f"{self.doctor.name} - {self.rating} stars by {self.user.username}"
 
-
-
 class DoctorTimeSlot(models.Model):
     DAY_CHOICES = (
         (0, 'Monday'),
@@ -102,15 +100,17 @@ class DoctorTimeSlot(models.Model):
     day_of_week = models.IntegerField(choices=DAY_CHOICES)
     start_time = models.TimeField()
     end_time = models.TimeField()
-    max_patients = models.PositiveIntegerField(default=40)
-
+    max_patients = models.PositiveIntegerField(default=10, help_text="Maximum patients for this time slot")
+    
     class Meta:
         unique_together = ('doctor', 'day_of_week', 'start_time', 'end_time')
+        ordering = ['day_of_week', 'start_time']
 
     def __str__(self):
-        return f"{self.doctor.name} ({self.get_day_of_week_display()}: {self.start_time} - {self.end_time}) - Max: {self.max_patients}"
+        return f"{self.doctor.name} ({self.get_day_of_week_display()}: {self.start_time} - {self.end_time}) - Max: {self.max_patients} patients"
     
     def get_booked_count(self, appointment_date):
+        """Get number of booked appointments for this slot on a specific date"""
         return Appointment.objects.filter(
             doctor=self.doctor,
             doctor_time_slot=self,
@@ -119,12 +119,26 @@ class DoctorTimeSlot(models.Model):
         ).count()
     
     def get_available_spots(self, appointment_date):
+        """Get remaining available spots for this slot"""
         booked = self.get_booked_count(appointment_date)
         return self.max_patients - booked
     
     def is_available(self, appointment_date):
+        """Check if slot has available spots"""
         return self.get_available_spots(appointment_date) > 0
+    
+    def get_booking_status(self, appointment_date):
+        """Get detailed booking status"""
+        booked = self.get_booked_count(appointment_date)
+        return {
+            'total': self.max_patients,
+            'booked': booked,
+            'available': self.max_patients - booked,
+            'is_full': booked >= self.max_patients,
+            'percentage': (booked / self.max_patients * 100) if self.max_patients > 0 else 0
+        }
 
+        
 class Appointment(models.Model):
     STATUS_CHOICES = (
         ('pending', 'Pending'),

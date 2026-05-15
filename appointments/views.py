@@ -82,11 +82,20 @@ def doctor_search(request):
     })
 
 
-
+# appointments/views.py - শুধু এই একটি create_appointment ফাংশন রাখুন
 
 @login_required
 def create_appointment(request, doctor_id):
     doctor = get_object_or_404(Doctor, id=doctor_id)
+    
+    # Get selected date from GET parameter (for showing slot availability)
+    selected_date_str = request.GET.get('date', '')
+    selected_date = None
+    if selected_date_str:
+        try:
+            selected_date = timezone.datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            selected_date = None
     
     if request.method == 'POST':
         appointment_date = request.POST.get('appointment_date')
@@ -100,36 +109,57 @@ def create_appointment(request, doctor_id):
             messages.error(request, "Please select an upcoming date.")
             return redirect(reverse('appointments:create_appointment', args=[doctor_id]))
         
-        # Check doctor's daily limit for the selected date
-        today_booked_count = Appointment.objects.filter(
+        # Validate time slot
+        if not appointment_time_id:
+            messages.error(request, "Please select a time slot.")
+            return redirect(reverse('appointments:create_appointment', args=[doctor_id]))
+        
+        try:
+            time_slot = DoctorTimeSlot.objects.get(id=appointment_time_id, doctor=doctor)
+        except DoctorTimeSlot.DoesNotExist:
+            messages.error(request, "Time slot not found.")
+            return redirect(reverse('appointments:create_appointment', args=[doctor_id]))
+        
+        # Check if time slot has available spots
+        booked_count = time_slot.get_booked_count(selected_date)
+        if booked_count >= time_slot.max_patients:
+            messages.error(request, f"Sorry! This time slot is fully booked. Maximum {time_slot.max_patients} patients allowed.")
+            return redirect(reverse('appointments:create_appointment', args=[doctor_id]))
+        
+        # Check doctor's daily limit
+        daily_booked = Appointment.objects.filter(
             doctor=doctor,
             appointment_date=selected_date,
             status__in=['confirmed', 'pending']
         ).count()
         
-        # যদি ডাক্তারের দৈনিক সীমা পূর্ণ হয়ে যায়
-        if today_booked_count >= doctor.daily_max_patients:
+        if daily_booked >= doctor.daily_max_patients:
             messages.error(request, f"Sorry! Dr. {doctor.name} is fully booked for {selected_date}. Maximum {doctor.daily_max_patients} patients per day.")
             return redirect(reverse('appointments:create_appointment', args=[doctor_id]))
         
-        # Time slot check (যদি টাইম স্লট সিস্টেম ব্যবহার করেন)
-        if appointment_time_id:
-            try:
-                time_slot = DoctorTimeSlot.objects.get(id=appointment_time_id, doctor=doctor)
-            except DoctorTimeSlot.DoesNotExist:
-                messages.error(request, "Time slot not found.")
-                return redirect(reverse('appointments:create_appointment', args=[doctor_id]))
-        else:
-            time_slot = None
+        # Check if user already has an appointment on this date
+        existing = Appointment.objects.filter(
+            user=request.user,
+            doctor=doctor,
+            appointment_date=selected_date,
+            status__in=['pending', 'confirmed']
+        ).exists()
         
-        # Serial number
-        serial_number = Appointment.objects.filter(doctor=doctor, appointment_date=selected_date).count() + 1
+        if existing:
+            messages.error(request, "You already have an appointment with this doctor on this date.")
+            return redirect(reverse('appointments:create_appointment', args=[doctor_id]))
+        
+        # Calculate serial number
+        serial_number = Appointment.objects.filter(
+            doctor=doctor, 
+            appointment_date=selected_date
+        ).count() + 1
         
         # Create appointment
         appointment = Appointment(
             user=request.user,
             doctor=doctor,
-            appointment_date=appointment_date,
+            appointment_date=selected_date,
             description=description,
             doctor_time_slot=time_slot,
             serial_number=serial_number,
@@ -137,27 +167,51 @@ def create_appointment(request, doctor_id):
         )
         appointment.save()
         
-        # Calculate remaining spots
-        remaining_spots = doctor.daily_max_patients - (today_booked_count + 1)
-        
-        messages.success(request, f"Appointment request sent successfully! {remaining_spots} spots remaining for {selected_date}")
+        messages.success(request, f"Appointment request sent successfully! Serial No: {serial_number}")
         return redirect(reverse('appointments:appointment'))
     
     # GET request - show booking form
+    # Get available time slots for this doctor
+    all_time_slots = DoctorTimeSlot.objects.filter(doctor=doctor).order_by('day_of_week', 'start_time')
+    
+    # Organize slots by day
+    slots_by_day = {}
+    day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    
+    for slot in all_time_slots:
+        day_name = day_names[slot.day_of_week] if slot.day_of_week < len(day_names) else f"Day {slot.day_of_week}"
+        if day_name not in slots_by_day:
+            slots_by_day[day_name] = []
+        slots_by_day[day_name].append(slot)
+    
+    # If a date is selected, get slot availability for that date
+    slot_availability = {}
+    if selected_date:
+        for slot in all_time_slots:
+            if slot.day_of_week == selected_date.weekday():
+                slot_availability[slot.id] = slot.get_booking_status(selected_date)
+    
+    today_booked = Appointment.objects.filter(
+        doctor=doctor,
+        appointment_date=timezone.now().date(),
+        status__in=['confirmed', 'pending']
+    ).count()
+    
+    remaining_spots = doctor.daily_max_patients - today_booked
+    
     return render(request, 'appointments/create_appointment.html', {
         'doctor': doctor,
-        'today_booked': Appointment.objects.filter(
-            doctor=doctor,
-            appointment_date=timezone.now().date(),
-            status__in=['confirmed', 'pending']
-        ).count(),
-        'remaining_spots': doctor.daily_max_patients - Appointment.objects.filter(
-            doctor=doctor,
-            appointment_date=timezone.now().date(),
-            status__in=['confirmed', 'pending']
-        ).count()
+        'all_time_slots': all_time_slots,
+        'slots_by_day': slots_by_day,
+        'slot_availability': slot_availability,
+        'selected_date': selected_date,
+        'today_booked': today_booked,
+        'remaining_spots': remaining_spots,
+        'day_names': day_names,
     })
 
+
+    
 @login_required
 def check_availability(request, doctor_id):
     """Check if doctor is available on a specific date"""
@@ -814,6 +868,62 @@ def search_patients(request):
             'last_visit': last_appointment.appointment_date.strftime('%Y-%m-%d') if last_appointment else 'Never'
         })
     return JsonResponse({'patients': patient_list})
+
+
+
+@login_required
+def get_slot_availability_api(request, doctor_id):
+    """API endpoint to check slot availability for a specific date"""
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+    date_str = request.GET.get('date')
+    
+    if not date_str:
+        return JsonResponse({'error': 'Date required'}, status=400)
+    
+    try:
+        selected_date = timezone.datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        return JsonResponse({'error': 'Invalid date'}, status=400)
+    
+    today = timezone.now().date()
+    
+    if selected_date < today:
+        return JsonResponse({'error': 'Please select future date'}, status=400)
+    
+    # Get all time slots for this doctor on the selected day
+    day_of_week = selected_date.weekday()
+    time_slots = DoctorTimeSlot.objects.filter(doctor=doctor, day_of_week=day_of_week)
+    
+    slots_data = []
+    for slot in time_slots:
+        status = slot.get_booking_status(selected_date)
+        slots_data.append({
+            'id': slot.id,
+            'start_time': slot.start_time.strftime('%I:%M %p'),
+            'end_time': slot.end_time.strftime('%I:%M %p'),
+            'max_patients': status['total'],
+            'booked': status['booked'],
+            'available': status['available'],
+            'is_full': status['is_full'],
+            'percentage': status['percentage'],
+        })
+    
+    # Also get daily limit info
+    daily_booked = Appointment.objects.filter(
+        doctor=doctor,
+        appointment_date=selected_date,
+        status__in=['confirmed', 'pending']
+    ).count()
+    
+    return JsonResponse({
+        'date': date_str,
+        'doctor_name': doctor.name,
+        'daily_limit': doctor.daily_max_patients,
+        'daily_booked': daily_booked,
+        'daily_available': doctor.daily_max_patients - daily_booked,
+        'time_slots': slots_data,
+        'has_slots': len(slots_data) > 0,
+    })
 
 
 @login_required

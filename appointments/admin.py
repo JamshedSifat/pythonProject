@@ -49,10 +49,24 @@ class DoctorTimeSlotAdmin(admin.ModelAdmin):
     list_display = ['doctor', 'get_day_display', 'start_time', 'end_time', 'max_patients']
     list_filter = ['doctor', 'day_of_week']
     list_editable = ['max_patients']
+    list_per_page = 20
     
     def get_day_display(self, obj):
         return obj.get_day_of_week_display()
     get_day_display.short_description = 'Day'
+    
+    fieldsets = (
+        ('Doctor Information', {
+            'fields': ('doctor',)
+        }),
+        ('Schedule', {
+            'fields': ('day_of_week', 'start_time', 'end_time')
+        }),
+        ('Capacity', {
+            'fields': ('max_patients',),
+            'description': 'Maximum number of patients allowed for this time slot'
+        }),
+    )
 
 
 @admin.register(Appointment)

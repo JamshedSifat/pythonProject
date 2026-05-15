@@ -48,6 +48,7 @@ urlpatterns = [
     path('doctor/time-slots/add/', views.add_time_slot, name='add_time_slot'),
     path('doctor/time-slots/delete/<int:slot_id>/', views.delete_time_slot, name='delete_time_slot'),
 
+path('api/slot-availability/<int:doctor_id>/', views.get_slot_availability_api, name='slot_availability_api'),
 
-     path('check-availability/<int:doctor_id>/', views.check_availability, name='check_availability'),
+    #  path('check-availability/<int:doctor_id>/', views.check_availability, name='check_availability'),
 ]
