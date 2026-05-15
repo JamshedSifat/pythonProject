@@ -24,7 +24,7 @@
                     <div class="space-y-1 text-sm"><p><span class="text-gray-500">Phone:</span> {{ patient.profile.mobile|default:"N/A" }}</p><p><span class="text-gray-500">Last Visit:</span> {{ patient.last_visit|date:"M d, Y"|default:"Never" }}</p></div>
                     <div class="mt-3 flex gap-2">
                         <a href="{% url 'appointments:patient_medical_history' patient.id %}" class="flex-1 text-center bg-teal-500 hover:bg-teal-600 text-white py-1 rounded text-sm"><i class="fas fa-notes-medical"></i> History</a>
-                        <a href="{% url 'appointments:create_appointment' doctor.id %}?patient={{ patient.id }}" class="flex-1 text-center bg-blue-500 hover:bg-blue-600 text-white py-1 rounded text-sm"><i class="fas fa-calendar-plus"></i> Book</a>
+                        <!-- <a href="{% url 'appointments:create_appointment' doctor.id %}?patient={{ patient.id }}" class="flex-1 text-center bg-blue-500 hover:bg-blue-600 text-white py-1 rounded text-sm"><i class="fas fa-calendar-plus"></i> Book</a> -->
                     </div>
                 </div>
                 {% endfor %}
